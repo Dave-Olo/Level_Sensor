@@ -2,53 +2,86 @@
 #include "rs485.hpp"
 #include "protocol.hpp"
 #include "level_sensor.hpp"
+#include "container.hpp"
 
-#define fluidDensity 1000  
-#define gravity 9.81 
-#define radius 0.1
 #define baudRate 9600
 
 const int TX_PIN = 17;  
 const int RX_PIN = 16;  
-const int DIR_PIN = 15; 
+const int DIR_PIN = 4; 
 
-float calculateVolume(float height) {
-    return PI * radius * radius * height; 
-}
+sensor::GLT500Level* levelSensor;
+rs485Comms::Rs485* rs485;
+Protocol::Glt500Protocol* protocol;
+const uint8_t slave_address = 1;
 
-float pressureToHeight(float pressure) {
-    return pressure / (fluidDensity * gravity); 
-}
-
+float radius = 5.0;
+float length = 6.5;
+float width = 6.3;
+container::Cylinder* cylinder;
+container::Cone* cone;
+container::Cuboid* cuboid;
 
 void setup() {
     Serial.begin(115200);
     Serial1.begin(baudRate, SERIAL_8N1, RX_PIN, TX_PIN); 
+    Serial.println("Serial Monitor Started");
     pinMode(DIR_PIN, OUTPUT); 
-    rs485Comms::rs485Setup rs485(Serial, DIR_PIN);
-    Protocol::ProtocolImplementation protocol;
-    sensor::LevelSensor levelSensor(protocol, rs485);
-
-    float pressure = 0.0;
-    common::error_type_t result = levelSensor.readPressure(pressure,baudRate);  
+    rs485 =new rs485Comms::Rs485(Serial1, DIR_PIN);
+    protocol = new Protocol::Glt500Protocol(slave_address) ;
+    Serial.println("Protocol Setup");
+    levelSensor = new sensor::GLT500Level(*protocol, *rs485);
+     Serial.println("got here.");
+    common::error_type_t result = levelSensor->init();
+    Serial.println("got here.");
     if (result != common::error_type_t::SUCCESS) {
-        Serial.println("Failed to read pressure.");
-        return;
+        Serial.println("Failed to init level sensor.");
+        //return;
+        while(true);
     }
-
-    float height = pressureToHeight(pressure);
-    Serial.print("Height: ");
-    Serial.println(height);
-
-    float volume = calculateVolume(height);
-    Serial.print("Volume: ");
-    Serial.print(volume);
-    Serial.println(" cubic meters");
-   
-    
-
+    Serial.println("Setup Complete");
+    cylinder = new container::Cylinder(radius); 
+    cone = new container::Cone(radius);
+    cuboid = new container::Cuboid(length, width);
  }
 
 void loop() {
-    
+ 
+    float height;
+    float volume;
+        
+
+    common::error_type_t result = levelSensor->getHeight(height);
+    if (result != common::error_type_t::SUCCESS) {
+        Serial.println("Failed to calculate height.");
+        delay(1000); // Retry after 1 second
+        return;
+    }
+
+    // result = cylinder->volume(volume, height);
+    // if (result == common::error_type_t::SUCCESS) {
+    //     Serial.printf("Cylinder Volume: %.2f\n", volume);
+    // } else {
+    //     Serial.println("Failed to calculate cylinder volume.");
+    // }
+
+    // result = cone->volume(volume, height);
+    // if (result == common::error_type_t::SUCCESS) {
+    //     Serial.printf("Cone Volume: %.2f\n", volume);
+    // } else {
+    //     Serial.println("Failed to calculate cone volume.");
+    // }
+
+
+    result = cuboid->volume(volume, height);
+    if (result == common::error_type_t::SUCCESS) {
+        Serial.printf("Cuboid Volume: %.2f\n", volume);
+    } else {
+        Serial.println("Failed to calculate cuboid volume.");
+    }
+
+   
+    delay(1000);
+
+   
 }

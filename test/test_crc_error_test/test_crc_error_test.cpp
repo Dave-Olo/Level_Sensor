@@ -65,12 +65,20 @@ TEST_F(CRCTest, ModbusCRC16_Modify) {
     EXPECT_EQ(computed_crc, expected_crc);
 }
 
+// invalid
+TEST_F(CRCTest, ModbusCRC16_Invalid){
+    uint8_t invalid_data[] = {0x01, 0x06, 0x00, 0x07, 0x21, 0x34, 0x21,  0x8C};
 
+    uint16_t expected_crc = 0x218C; 
+
+    uint16_t computed_crc = crc.CalculateCRC(invalid_data, sizeof(invalid_data) - 2);
+
+    EXPECT_NE(computed_crc, expected_crc);
+
+}
 
 void setup()
 {
-    // should be the same value as for the `test_speed` option in "platformio.ini"
-    // default value is test_speed=115200
     Serial.begin(115200);
     delay(1000);
     ::testing::InitGoogleTest();

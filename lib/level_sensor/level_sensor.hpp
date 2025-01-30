@@ -5,19 +5,31 @@
 #include "rs485.hpp"
 #include "common_header.hpp"
 
-namespace sensor
+namespace Sensor
 {
-    class LevelSensor
-    {
+    class LevelSensorInterface{
+     public:
+       
+        virtual common::error_type_t init() = 0;
+        virtual common::error_type_t getHeight(float& height) = 0;
+        virtual ~LevelSensorInterface() = default;
+
+    };
+
+
+    class GLT500Level : public LevelSensorInterface {
     public:
-        LevelSensor(Protocol::ProtocolInterface& protocolHandler, rs485Comms::RS485Interface& rs485Handler);
-         common::error_type_t readRegister(uint16_t regAddress, uint16_t& data);
-        common::error_type_t readPressure(float& pressure, unsigned long baudRate);
-        
+        GLT500Level(Protocol::ProtocolInterface& protocolHandler, RS485Comms::CommInterface& rs485Handler);
+        ~GLT500Level() override; 
+
+        common::error_type_t init() override;
+        common::error_type_t getHeight(float& height) override;
+        //common::error_type_t test();
+
     private:
+        common::error_type_t readPressure(float& pressure);
         Protocol::ProtocolInterface& protocol;
-        rs485Comms::RS485Interface& rs485;
-        //common::error_type_t readRegister(uint16_t regAddress, uint16_t& data);
+        RS485Comms::CommInterface& rs485;
     };
 }
 

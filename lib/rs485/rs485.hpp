@@ -6,30 +6,30 @@
 #include "common_header.hpp"
 #include <HardwareSerial.h>
 
-namespace rs485Comms
+namespace RS485Comms
 {
-
-    class RS485Interface
+    
+    class CommInterface
     {
     public:
-        virtual common::error_type_t init(unsigned long baudRate) = 0;
+        virtual common::error_type_t init() = 0;
         virtual common::error_type_t sendBytes(const uint8_t *data, size_t length) = 0;
-        virtual common::error_type_t receiveBytes(uint8_t *buffer, size_t length, size_t &bytesRead) = 0;
+        virtual common::error_type_t receiveBytes(uint8_t *buffer, size_t length, size_t *bytesRead) = 0;
         virtual common::error_type_t deinit() = 0;
-        virtual ~RS485Interface() = default;
+        virtual ~CommInterface() = default;
     };
 
-    
-    class rs485Setup : public RS485Interface
+   
+    class Rs485 : public CommInterface
     {
     public:
-        rs485Setup(HardwareSerial &serial, int dirPin);
-        common::error_type_t init(unsigned long baudRate) override;
+        Rs485(HardwareSerial &serial, int dirPin);
+        common::error_type_t init() override;
         common::error_type_t sendBytes(const uint8_t *data, size_t length) override;
-        common::error_type_t receiveBytes(uint8_t *buffer, size_t length, size_t &bytesRead) override;
+        common::error_type_t receiveBytes(uint8_t *buffer, size_t length, size_t *bytesRead) override;
         common::error_type_t deinit() override;
 
-    protected:
+    private:
         HardwareSerial &serial;
         int dirPin;
         bool isInitialized = false;

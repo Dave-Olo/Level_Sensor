@@ -46,6 +46,6 @@ uint16_t CRC16::CalculateCRC(const uint8_t *nData, uint16_t wLength) {
         wCRCWord >>= 8;
         wCRCWord ^= wCRCTable[nTemp];
     }
-    
+    Serial.printf("will return  %.02X\n",wCRCWord);
     return wCRCWord;
 }
